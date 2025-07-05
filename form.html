@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Botify フォームログイン中...</title>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+    .loading {
+      color: #666;
+      margin: 20px 0;
+    }
+    .error {
+      color: #d32f2f;
+      background-color: #ffebee;
+      padding: 15px;
+      border-radius: 5px;
+      margin: 20px 0;
+    }
+  </style>
+</head>
+<body>
+  <h2>LINEログインしています。しばらくお待ちください...</h2>
+  <div class="loading">ログイン処理中...</div>
+
+  <script>
+    // ここにあなたの LIFF ID を入力
+    const liffId = "2007697448-JE8Kx3Mq";
+
+    // ここに GoogleフォームのURLと LINE userId を受け取るフォーム項目ID（entry.123456...）を入力
+    const googleFormBaseUrl = "https://docs.google.com/forms/d/e/1FAIpQLSelfBQKobCO1AHGagLT6zoDUV8VcxjsisoHpeDWUanYUfQxNw/viewform";
+    const userIdEntryId = "entry.1234567890"; // ←LINE userIdを入れる項目のentry ID（実際のIDに変更してください）
+
+    async function main() {
+      try {
+        // LIFF SDKの読み込み確認
+        if (typeof liff === 'undefined') {
+          throw new Error('LIFF SDKの読み込みに失敗しました');
+        }
+
+        // LIFF初期化
+        await liff.init({ liffId });
+
+        // ログイン状態確認
+        if (!liff.isLoggedIn()) {
+          liff.login();
+          return;
+        }
+
+        // ユーザープロフィール取得
+        const profile = await liff.getProfile();
+        const userId = encodeURIComponent(profile.userId);
+
+        // Googleフォームに userId を埋め込んで遷移
+        // 注意: userIdEntryId は実際のGoogleフォームのentry IDに変更してください
+        const redirectUrl = `${googleFormBaseUrl}?usp=prefill&${userIdEntryId}=${userId}`;
+        
+        console.log('リダイレクト先:', redirectUrl);
+        window.location.href = redirectUrl;
+
+      } catch (e) {
+        console.error('LIFFエラー:', e);
+        document.body.innerHTML = `
+          <div class="error">
+            <h3>エラーが発生しました</h3>
+            <p>LIFFログインに失敗しました：${e.message}</p>
+            <p>ページを再読み込みして再度お試しください。</p>
+          </div>
+        `;
+      }
+    }
+
+    // ページ読み込み完了後に実行
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', main);
+    } else {
+      main();
+    }
+  </script>
+</body>
+</html>
