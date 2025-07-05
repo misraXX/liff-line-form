@@ -10,47 +10,56 @@
     form { background: #fff; padding: 20px; border-radius: 8px; max-width: 400px; margin: auto; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
     input, button { width: 80%; padding: 10px; margin: 10px 0; font-size: 16px; }
     .message { margin-top: 20px; color: green; }
+    #loading { margin: 30px 0; color: #666; }
+    .error { color: #d32f2f; margin: 20px 0; }
   </style>
 </head>
 <body>
-  <form id="registerForm">
+  <div id="loading">LINEログイン中...</div>
+  <form id="registerForm" style="display:none;">
     <h2>Botify 会員登録</h2>
     <input type="text" name="email" placeholder="メールアドレス" required>
     <input type="hidden" name="userId" id="userId">
     <input type="hidden" name="displayName" id="displayName">
     <button type="submit">登録する</button>
   </form>
-
   <div class="message" id="responseMessage"></div>
-
   <script>
     const LIFF_ID = "2007697448-JE8Kx3Mq";
     const GAS_ENDPOINT = "https://script.google.com/macros/s/AKfycbxiVEmxeFKFRv-vGi5iG4Nib4pfdczrq4BqgrooZQBGK9Hgr2SPZY1_S9Fn3aNUJdo/exec";
 
-    async function init() {
-      await liff.init({ liffId: LIFF_ID });
-      if (!liff.isLoggedIn()) liff.login();
-      const profile = await liff.getProfile();
-      document.getElementById("userId").value = profile.userId;
-      document.getElementById("displayName").value = profile.displayName;
+    async function main() {
+      try {
+        await liff.init({ liffId: LIFF_ID });
+        if (!liff.isLoggedIn()) {
+          liff.login();
+          return;
+        }
+        const profile = await liff.getProfile();
+        document.getElementById("userId").value = profile.userId;
+        document.getElementById("displayName").value = profile.displayName;
+
+        // フォーム表示
+        document.getElementById("loading").style.display = "none";
+        document.getElementById("registerForm").style.display = "block";
+
+        document.getElementById("registerForm").addEventListener("submit", async function(e) {
+          e.preventDefault();
+          const data = Object.fromEntries(new FormData(e.target));
+          await fetch(GAS_ENDPOINT, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+          });
+          await liff.sendMessages([{ type: 'text', text: '会員登録ありがとうございます！' }]);
+          document.getElementById("responseMessage").textContent = "登録が完了しました。";
+          e.target.reset();
+        });
+      } catch (e) {
+        document.getElementById("loading").innerHTML = '<span class="error">LIFF初期化に失敗しました: ' + e + '</span>';
+      }
     }
-
-    document.getElementById("registerForm").addEventListener("submit", async function(e) {
-      e.preventDefault();
-      const data = Object.fromEntries(new FormData(e.target));
-
-      await fetch(GAS_ENDPOINT, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-      });
-
-      await liff.sendMessages([{ type: 'text', text: '会員登録ありがとうございます！' }]);
-      document.getElementById("responseMessage").textContent = "登録が完了しました。";
-      e.target.reset();
-    });
-
-    window.onload = init;
+    window.onload = main;
   </script>
 </body>
 </html>
