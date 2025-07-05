@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Botify 会員登録</title>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f2f2f2; padding: 20px; text-align: center; }
+    form { background: #fff; padding: 20px; border-radius: 8px; max-width: 400px; margin: auto; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+    input, button { width: 100%; padding: 10px; margin: 10px 0; font-size: 16px; }
+    .message { margin-top: 20px; color: green; }
+  </style>
+</head>
+<body>
+  <form id="registerForm">
+    <h2>Botify 会員登録</h2>
+    <input type="text" name="email" placeholder="メールアドレス" required>
+    <input type="hidden" name="userId" id="userId">
+    <input type="hidden" name="displayName" id="displayName">
+    <button type="submit">登録する</button>
+  </form>
+
+  <div class="message" id="responseMessage"></div>
+
+  <script>
+    const LIFF_ID = "2007697448-JE8Kx3Mq";
+    const GAS_ENDPOINT = "<GASのURL>";
+
+    async function init() {
+      await liff.init({ liffId: LIFF_ID });
+      if (!liff.isLoggedIn()) liff.login();
+      const profile = await liff.getProfile();
+      document.getElementById("userId").value = profile.userId;
+      document.getElementById("displayName").value = profile.displayName;
+    }
+
+    document.getElementById("registerForm").addEventListener("submit", async function(e) {
+      e.preventDefault();
+      const data = Object.fromEntries(new FormData(e.target));
+
+      await fetch(GAS_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+
+      await liff.sendMessages([{ type: 'text', text: '会員登録ありがとうございます！' }]);
+      document.getElementById("responseMessage").textContent = "登録が完了しました。";
+      e.target.reset();
+    });
+
+    window.onload = init;
+  </script>
+</body>
+</html>
