@@ -79,10 +79,10 @@
             e.target.reset();
           } catch (error) {
             console.error('送信エラー:', error);
-            if (error.message.includes('RateLimit')) {
-              document.getElementById("responseMessage").textContent = "送信が多すぎます。しばらく待ってから再試行してください。";
+            if (error.message && error.message.includes('RateLimit')) {
+              document.getElementById("responseMessage").textContent = "送信が多すぎます。しばらく待ってから再試行してください。\n" + error.message;
             } else {
-              document.getElementById("responseMessage").textContent = "送信に失敗しました。";
+              document.getElementById("responseMessage").textContent = "送信に失敗しました。\n" + (error.message || error);
             }
           } finally {
             // ボタンを再度有効化
