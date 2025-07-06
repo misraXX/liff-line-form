@@ -46,14 +46,20 @@
         document.getElementById("registerForm").addEventListener("submit", async function(e) {
           e.preventDefault();
           const data = Object.fromEntries(new FormData(e.target));
-          await fetch(GAS_ENDPOINT, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-          });
-          await liff.sendMessages([{ type: 'text', text: '会員登録ありがとうございます！' }]);
-          document.getElementById("responseMessage").textContent = "登録が完了しました。";
-          e.target.reset();
+          try {
+            await fetch(GAS_ENDPOINT, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(data),
+              mode: 'no-cors'
+            });
+            await liff.sendMessages([{ type: 'text', text: '会員登録ありがとうございます！' }]);
+            document.getElementById("responseMessage").textContent = "登録が完了しました。";
+            e.target.reset();
+          } catch (error) {
+            console.error('送信エラー:', error);
+            document.getElementById("responseMessage").textContent = "送信に失敗しました。";
+          }
         });
       } catch (e) {
         document.getElementById("loading").innerHTML = '<span class="error">LIFF初期化に失敗しました: ' + e + '</span>';
