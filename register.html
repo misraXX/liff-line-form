@@ -45,20 +45,44 @@
 
         document.getElementById("registerForm").addEventListener("submit", async function(e) {
           e.preventDefault();
+          
+          // ボタンを無効化して重複クリックを防ぐ
+          const submitButton = e.target.querySelector('button[type="submit"]');
+          submitButton.disabled = true;
+          submitButton.textContent = '送信中...';
+          
           const data = Object.fromEntries(new FormData(e.target));
           try {
-            await fetch(GAS_ENDPOINT, {
+            const response = await fetch(GAS_ENDPOINT, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(data),
-              mode: 'no-cors'
+              body: JSON.stringify(data)
             });
+            
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const result = await response.json();
+            console.log('GAS response:', result);
+            
+            // レート制限エラーを回避するため、少し待機
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
             await liff.sendMessages([{ type: 'text', text: '会員登録ありがとうございます！' }]);
             document.getElementById("responseMessage").textContent = "登録が完了しました。";
             e.target.reset();
           } catch (error) {
             console.error('送信エラー:', error);
-            document.getElementById("responseMessage").textContent = "送信に失敗しました。";
+            if (error.message.includes('RateLimit')) {
+              document.getElementById("responseMessage").textContent = "送信が多すぎます。しばらく待ってから再試行してください。";
+            } else {
+              document.getElementById("responseMessage").textContent = "送信に失敗しました。";
+            }
+          } finally {
+            // ボタンを再度有効化
+            submitButton.disabled = false;
+            submitButton.textContent = '登録する';
           }
         });
       } catch (e) {
