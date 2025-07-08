@@ -29,7 +29,6 @@
   <div class="message" id="responseMessage"></div>
   <script>
     const LIFF_ID = "2007697448-jeaknwme";
-    const GAS_ENDPOINT = "https://script.google.com/macros/s/AKfycbxiVEmxeFKFRv-vGi5iG4Nib4pfdczrq4BqgrooZQBGK9Hgr2SPZY1_S9Fn3aNUJdo/exec";
 
     async function main() {
       try {
@@ -53,10 +52,10 @@
           submitButton.textContent = '送信中...';
           try {
             const data = Object.fromEntries(new FormData(e.target));
-            // GASにメールアドレス・紹介コード・userId・displayNameを送信
-            const params = new URLSearchParams(data).toString();
-            await fetch(GAS_ENDPOINT + '?' + params);
-            const message = `会員登録が完了しました\n${data.email}` + (data.referral ? `\n紹介コード: ${data.referral}` : '');
+            let message = `会員登録が完了しました\n${data.email}`;
+            if (data.referral) {
+              message += `\n紹介コード: ${data.referral}`;
+            }
             await liff.sendMessages([{ type: 'text', text: message }]);
             document.getElementById("responseMessage").textContent = "LINEにメッセージを送信しました。";
             e.target.reset();
