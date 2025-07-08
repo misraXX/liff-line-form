@@ -60,8 +60,9 @@
             document.getElementById("responseMessage").textContent = "LINEにメッセージを送信しました。";
             e.target.reset();
           } catch (error) {
-            console.error('送信エラー:', error);
-            document.getElementById("responseMessage").textContent = "送信に失敗しました。\n" + (error.message || error);
+            const errorMsg = "送信に失敗しました。\n" + (error.message || error);
+            document.getElementById("responseMessage").textContent = errorMsg;
+            alert(errorMsg);
           } finally {
             submitButton.disabled = false;
             submitButton.textContent = '登録する';
